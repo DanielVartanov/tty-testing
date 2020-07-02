@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "tty/testing"
-
-RSpec.describe TTY::Testing::App, "#output", "#stdout", "#stderr" do
+RSpec.describe TTY::Testing::App, "#output, #stdout, #stderr" do
   let(:app) do
     TTY::Testing.app_wrapper do |stdin, stdout, stderr|
       stderr.puts "[LOG] Program started"

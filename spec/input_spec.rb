@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "tty/testing"
-
 RSpec.describe TTY::Testing::App, "#input" do
   describe "pre-populated input" do
     let(:app) do
