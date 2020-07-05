@@ -45,7 +45,7 @@ RSpec.describe TTY::Testing::App, "#input" do
         before { app.input.puts "Motaro" }
 
         it 'automatically resumes execution' do
-          expect(accumulator).to eq [:beginning, "Motaro"]
+          expect(accumulator).to eq [:beginning, "Motaro\n"]
         end
       end
     end
