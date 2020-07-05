@@ -12,6 +12,9 @@ module TTY
         self.stdout_reader, self.stdout_writer = IO.pipe
         self.stderr_reader, self.stderr_writer = IO.pipe
 
+        self.entire_stdout = String.new
+        self.entire_stderr = String.new
+
         self.paused = true
         self.fiber = Fiber.new { app_block.call(stdin_reader, stdout_writer, stderr_writer) }
 
@@ -19,13 +22,29 @@ module TTY
       end
 
       def stdout
-        stdout_reader.read_available
+        stdout_reader.read_available.tap do |output_chunk|
+          @entire_stdout << output_chunk
+        end
       end
-      alias output stdout
 
       def stderr
-        stderr_reader.read_available
+        stderr_reader.read_available.tap do |output_chunk|
+          @entire_stderr << output_chunk
+        end
       end
+
+      def entire_stdout
+        stdout
+        @entire_stdout
+      end
+
+      def entire_stderr
+        stderr
+        @entire_stderr
+      end
+
+      alias output stdout
+      alias entire_output entire_stdout
 
       def input
         stdin_writer
@@ -41,6 +60,8 @@ module TTY
       attr_accessor :stdin_reader, :stdin_writer
       attr_accessor :stdout_reader, :stdout_writer
       attr_accessor :stderr_reader, :stderr_writer
+
+      attr_writer :entire_stdout, :entire_stderr
 
       attr_accessor :fiber
 
