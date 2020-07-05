@@ -12,6 +12,7 @@ module TTY
         self.stdout_reader, self.stdout_writer = IO.pipe
         self.stderr_reader, self.stderr_writer = IO.pipe
 
+        self.paused = true
         self.fiber = Fiber.new { app_block.call(stdin_reader, stdout_writer, stderr_writer) }
 
         entangle_fiber_and_stdin(fiber, stdin_reader, stdin_writer)
@@ -31,6 +32,7 @@ module TTY
       end
 
       def run!
+        self.paused = false
         fiber.resume
       end
 
@@ -42,6 +44,9 @@ module TTY
 
       attr_accessor :fiber
 
+      attr_accessor :paused
+      alias paused? paused
+
       def entangle_fiber_and_stdin(fiber, stdin_reader, stdin_writer)
         def stdin_reader.gets
           if ready?
@@ -52,9 +57,10 @@ module TTY
           end
         end
 
+        paused_proc = self.method(:paused?).to_proc
         stdin_writer.define_singleton_method(:puts) do |*args|
           super(*args)
-          fiber.resume
+          fiber.resume unless paused_proc.()
         end
       end
     end
