@@ -16,9 +16,14 @@ module TTY
         self.entire_stderr = String.new
 
         self.paused = true
-        self.fiber = Fiber.new { app_block.call(stdin_reader, stdout_writer, stderr_writer) }
+        self.fiber = Fiber.new do
+          app_block.call(stdin_reader, stdout_writer, stderr_writer)
+          self.exited = true
+        end
 
         entangle_fiber_and_stdin(fiber, stdin_reader, stdin_writer)
+
+        self.exited = false
       end
 
       def stdout
@@ -55,6 +60,9 @@ module TTY
         fiber.resume
       end
 
+      attr_reader :exited
+      alias exited? exited
+
       protected
 
       attr_accessor :stdin_reader, :stdin_writer
@@ -67,6 +75,8 @@ module TTY
 
       attr_accessor :paused
       alias paused? paused
+
+      attr_writer :exited
 
       def entangle_fiber_and_stdin(fiber, stdin_reader, stdin_writer)
         def stdin_reader.gets
