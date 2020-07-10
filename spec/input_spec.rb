@@ -23,29 +23,51 @@ RSpec.describe TTY::Testing::App, "#input" do
     end
   end
 
-  describe "implicit pausing and resuming" do
+  describe "pausing and resuming" do
     let(:accumulator) { Array.new }
 
     let(:app) do
       TTY::Testing.app_wrapper do |input, _|
         accumulator << :beginning
         name = input.gets
-        accumulator << name
+        accumulator << name.strip
       end
     end
 
-    context "when input is not pre-populated" do
-      before { app.run! }
+    before { app.run! }
 
-      it 'automatically pauses execution when expects input' do
-        expect(accumulator).to eq [:beginning]
-      end
+    it 'automatically pauses execution when expects input' do
+      expect(accumulator).to eq [:beginning]
+    end
 
+    describe 'implicit resuming' do
       context 'when a line of input is passed' do
         before { app.input.puts "Motaro" }
 
         it 'automatically resumes execution' do
-          expect(accumulator).to eq [:beginning, "Motaro\n"]
+          expect(accumulator).to eq [:beginning, "Motaro"]
+        end
+      end
+    end
+
+    describe 'explicit resuming' do
+      context 'whe the app is explicitly paused' do
+        before { app.pause! }
+
+        context 'when a line of input is passed' do
+          before { app.input.puts "Motaro" }
+
+          it 'does not resume execution' do
+            expect(accumulator).to eq [:beginning]
+          end
+
+          context 'when the app is explicitly resumed' do
+            before { app.resume! }
+
+            it 'resumes execution' do
+              expect(accumulator).to eq [:beginning, "Motaro"]
+            end
+          end
         end
       end
     end

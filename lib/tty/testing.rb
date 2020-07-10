@@ -55,10 +55,15 @@ module TTY
         stdin_writer
       end
 
-      def run!
+      def pause!
+        self.paused = true
+      end
+
+      def resume!
         self.paused = false
         fiber.resume
       end
+      alias run! resume!
 
       attr_reader :exited
       alias exited? exited
