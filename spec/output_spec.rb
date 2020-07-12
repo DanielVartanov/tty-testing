@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe TTY::Testing::App, "output" do
-  describe "#stdout, #stderr" do
+  describe "separated stdout and stderr" do
     let(:app) do
       TTY::Testing.app_wrapper do |stdin, stdout, stderr|
         stderr.puts "[LOG] Program started"
@@ -59,27 +59,22 @@ RSpec.describe TTY::Testing::App, "output" do
                                             "[LOG] Expecting input now...\n" \
                                             "[LOG] Exiting\n"
           end
+        end
 
-          describe "#stdout_stream, #stderr_stream" do
-            it "returns respective IO stream" do
-              expect(app.stdout_stream).to be_an(IO)
-              app.stdout_stream.rewind
-              expect(app.stdout_stream.readlines.join).to eq "What is your name?\n" \
-                                                             "Hello, Kintaro!\n"
+        describe "#stdout_stream, #stderr_stream" do
+          it "returns respective IO stream" do
+            expect(app.stdout_stream).to be_an(IO)
+            expect(app.stdout_stream.readline).to eq "Hello, Kintaro!\n"
 
-              expect(app.stderr_stream).to be_an(IO)
-              app.stderr_stream.rewind
-              expect(app.stderr_stream.readlines.join).to eq "[LOG] Program started\n" \
-                                                             "[LOG] Expecting input now..." \
-                                                             "[LOG] Exiting\n"
-            end
+            expect(app.stderr_stream).to be_an(IO)
+            expect(app.stderr_stream.readline).to eq "[LOG] Exiting\n"
           end
         end
       end
     end
   end
 
-  describe "#output" do
+  describe "merged stdout and stderr" do
     let(:app) do
       TTY::Testing.app_wrapper do |input, output|
         output.puts "[LOG] Program started"
@@ -95,29 +90,48 @@ RSpec.describe TTY::Testing::App, "output" do
 
     before { app.run! }
 
-    it "merges stdout and stderr" do
-      expect(app.output).to eq "[LOG] Program started\n" \
-                               "What is your name?\n" \
-                               "[LOG] Expecting input now...\n"
+    describe '#output' do
+      it 'merged stdout and stderr' do
+        expect(app.output).to eq "[LOG] Program started\n" \
+                                 "What is your name?\n" \
+                                 "[LOG] Expecting input now...\n"
 
-      app.input.puts "Kintaro"
+        app.input.puts "Kintaro"
 
-      expect(app.output).to eq "Hello, Kintaro!\n" \
-                               "[LOG] Exiting\n"
+        expect(app.output).to eq "Hello, Kintaro!\n" \
+                                 "[LOG] Exiting\n"
+      end
+    end
 
-      expect(app.entire_output).to eq "[LOG] Program started\n" \
+    describe '#entire_output' do
+      it 'merged stdout and stderr' do
+        expect(app.entire_output).to eq "[LOG] Program started\n" \
+                                        "What is your name?\n" \
+                                        "[LOG] Expecting input now...\n" \
+
+        app.input.puts "Kintaro"
+
+        expect(app.entire_output).to eq "[LOG] Program started\n" \
                                       "What is your name?\n" \
                                       "[LOG] Expecting input now...\n" \
                                       "Hello, Kintaro!\n" \
                                       "[LOG] Exiting\n"
+      end
+    end
 
-      expect(app.output_stream).to be_an(IO)
-      app.output_stream.rewind
-      expect(app.output_stream.readlines.join).to eq "[LOG] Program started\n" \
-                                                     "What is your name?\n" \
-                                                     "[LOG] Expecting input now...\n" \
-                                                     "Hello, Kintaro!\n" \
-                                                     "[LOG] Exiting\n"
+    describe '#output_stream' do
+      it 'merged stdout and stderr' do
+        expect(app.output_stream).to be_an(IO)
+
+        expect(app.output_stream.read_available).to eq "[LOG] Program started\n" \
+                                                       "What is your name?\n" \
+                                                       "[LOG] Expecting input now...\n"
+
+        app.input.puts "Kintaro"
+
+        expect(app.output_stream.read_available).to eq "Hello, Kintaro!\n" \
+                                                       "[LOG] Exiting\n"
+      end
     end
   end
 

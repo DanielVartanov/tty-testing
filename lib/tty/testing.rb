@@ -48,8 +48,17 @@ module TTY
         @entire_stderr
       end
 
+      def stdout_stream
+        self.stdout_reader
+      end
+
+      def stderr_stream
+        self.stderr_reader
+      end
+
       alias output stdout
       alias entire_output entire_stdout
+      alias output_stream stdout_stream
 
       def input
         stdin_writer
