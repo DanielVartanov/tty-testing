@@ -120,4 +120,19 @@ RSpec.describe TTY::Testing::App, "output" do
                                                      "[LOG] Exiting\n"
     end
   end
+
+  describe 'output of subprocesses' do
+    let(:app) do
+      TTY::Testing.app_wrapper do |_, output|
+        pid = Process.spawn 'echo "Hello from subprocess!"', out: output
+        Process.waitpid(pid)
+      end
+    end
+
+    before { app.run! }
+
+    it 'captures output from subprocess' do
+      expect(app.output).to eq "Hello from subprocess!\n"
+    end
+  end
 end
