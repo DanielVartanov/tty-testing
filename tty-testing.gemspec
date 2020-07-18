@@ -11,8 +11,6 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://piotrmurach.github.io/tty"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
-  spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
-
   if spec.respond_to?(:metadata=)
     spec.metadata = {
       "allowed_push_host" => "https://rubygems.org",
