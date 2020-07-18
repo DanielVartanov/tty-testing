@@ -8,10 +8,10 @@ require_relative "testing/app"
 
 module TTY
   module Testing
+    module_function
+
     def app_wrapper(&block)
       App.new(&block)
     end
-
-    module_function :app_wrapper
   end
 end

@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 module TTY
   module Testing
     class App
-      OBSERVED_READING_METHODS = [:getc, :gets, :read, :readchar, :readline, :readlines, :wait_readable]
+      OBSERVED_READING_METHODS = %i[getc gets read readchar readline readlines wait_readable].freeze
 
       def initialize(&app_block)
         self.stdin_reader, self.stdin_writer = IO.pipe
@@ -45,11 +47,11 @@ module TTY
       end
 
       def stdout_stream
-        self.stdout_reader
+        stdout_reader
       end
 
       def stderr_stream
-        self.stderr_reader
+        stderr_reader
       end
 
       alias output stdout
@@ -91,19 +93,15 @@ module TTY
       def entangle_fiber_and_stdin(fiber, stdin_reader, stdin_writer)
         OBSERVED_READING_METHODS.each do |reading_method|
           stdin_reader.define_singleton_method(reading_method) do |*args|
-            if ready?
-              super(*args)
-            else
-              Fiber.yield
-              super(*args)
-            end
+            Fiber.yield unless ready?
+            super(*args)
           end
         end
 
-        paused_proc = self.method(:paused?).to_proc
+        paused_proc = method(:paused?).to_proc
         stdin_writer.define_singleton_method(:puts) do |*args|
           super(*args)
-          fiber.resume unless paused_proc.()
+          fiber.resume unless paused_proc.call
         end
       end
     end

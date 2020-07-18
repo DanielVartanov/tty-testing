@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module TTY
   module Testing
     VERSION = "0.0.1"

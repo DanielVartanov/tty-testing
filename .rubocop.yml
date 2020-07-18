@@ -31,16 +31,25 @@ Metrics/MethodLength:
 Naming/BinaryOperatorParameterName:
   Enabled: false
 
-RSpec/FilePath
+RSpec/ContextWording:
   Enabled: false
 
-RSpec/MultipleExpectations
+RSpec/FilePath:
+  Enabled: false
+
+RSpec/LeadingSubject:
+  Enabled: false
+
+RSpec/MultipleExpectations:
   Enabled: false
 
 RSpec/NestedGroups:
   Max: 7
 
 Style/AsciiComments:
+  Enabled: false
+
+Style/EmptyLiteral:
   Enabled: false
 
 Style/LambdaCall:

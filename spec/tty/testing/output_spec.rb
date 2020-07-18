@@ -26,7 +26,7 @@ RSpec.describe TTY::Testing::App, "output" do
                                "[LOG] Expecting input now...\n"
     end
 
-    context 'after #stdout and #stderr were called' do
+    context "after #stdout and #stderr were called" do
       before do
         app.stdout
         app.stderr
@@ -90,8 +90,8 @@ RSpec.describe TTY::Testing::App, "output" do
 
     before { app.run! }
 
-    describe '#output' do
-      it 'merged stdout and stderr' do
+    describe "#output" do
+      it "merged stdout and stderr" do
         expect(app.output).to eq "[LOG] Program started\n" \
                                  "What is your name?\n" \
                                  "[LOG] Expecting input now...\n"
@@ -103,8 +103,8 @@ RSpec.describe TTY::Testing::App, "output" do
       end
     end
 
-    describe '#entire_output' do
-      it 'merged stdout and stderr' do
+    describe "#entire_output" do
+      it "merged stdout and stderr" do
         expect(app.entire_output).to eq "[LOG] Program started\n" \
                                         "What is your name?\n" \
                                         "[LOG] Expecting input now...\n" \
@@ -119,8 +119,8 @@ RSpec.describe TTY::Testing::App, "output" do
       end
     end
 
-    describe '#output_stream' do
-      it 'merged stdout and stderr' do
+    describe "#output_stream" do
+      it "merged stdout and stderr" do
         expect(app.output_stream).to be_an(IO)
 
         expect(app.output_stream.read_available).to eq "[LOG] Program started\n" \
@@ -135,17 +135,17 @@ RSpec.describe TTY::Testing::App, "output" do
     end
   end
 
-  describe 'output of subprocesses' do
+  describe "output of subprocesses" do
     let(:app) do
       TTY::Testing.app_wrapper do |_, output|
-        pid = Process.spawn 'echo "Hello from subprocess!"', out: output
+        pid = Process.spawn "echo 'Hello from subprocess!'", out: output
         Process.waitpid(pid)
       end
     end
 
     before { app.run! }
 
-    it 'captures output from subprocess' do
+    it "captures output from subprocess" do
       expect(app.output).to eq "Hello from subprocess!\n"
     end
   end
