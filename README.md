@@ -190,7 +190,7 @@ puts counter # => 101
 
 ### 3.1 #output
 
-`app.output` returns standard output written by the app _since the last
+`app.output` returns output written by the app _since the last
 call of the same method_.
 
 ```ruby
@@ -213,7 +213,7 @@ puts app.output # =>
 ### 3.2 #entire_output
 
 `app.entire_output` returns entire output written by the app since the
-beginning of its executionN
+beginning of its execution
 
 ```ruby
 app = TTY::Testing.app_wrapper do |input, output|
