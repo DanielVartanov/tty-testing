@@ -1,6 +1,8 @@
 module TTY
   module Testing
     class App
+      OBSERVED_READING_METHODS = [:getc, :gets, :read, :readchar, :readline, :readlines, :wait_readable]
+
       def initialize(&app_block)
         self.stdin_reader, self.stdin_writer = IO.pipe
         self.stdout_reader, self.stdout_writer = IO.pipe
@@ -87,12 +89,14 @@ module TTY
       attr_writer :exited
 
       def entangle_fiber_and_stdin(fiber, stdin_reader, stdin_writer)
-        def stdin_reader.gets
-          if ready?
-            super
-          else
-            Fiber.yield
-            super
+        OBSERVED_READING_METHODS.each do |reading_method|
+          stdin_reader.define_singleton_method(reading_method) do |*args|
+            if ready?
+              super(*args)
+            else
+              Fiber.yield
+              super(*args)
+            end
           end
         end
 

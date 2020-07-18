@@ -72,4 +72,24 @@ RSpec.describe TTY::Testing::App, "#input" do
       end
     end
   end
+
+  describe "various input methods upon which execution pauses" do
+    [:getc, :gets, :read, :readchar, :readline, :readlines, :wait_readable].each do |reading_method|
+
+      it "automatically pauses when ##{reading_method} is called" do
+        accumulator = Array.new
+
+        app = TTY::Testing.app_wrapper do |input, _|
+          accumulator << :beginning
+          input.__send__(reading_method)
+          accumulator << :beyond_input
+        end
+
+        app.run!
+
+        expect(accumulator).to eq [:beginning]
+      end
+
+    end
+  end
 end
