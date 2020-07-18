@@ -4,6 +4,8 @@
 
 # TTY::Testing [![Gitter](https://badges.gitter.im/Join%20Chat.svg)][gitter]
 
+[gitter]: https://gitter.im/piotrmurach/tty
+
 > A testing tool for interactive command line apps
 
 **TTY::Testing** provides testing component for [TTY](https://github.com/piotrmurach/tty) toolkit.
@@ -38,14 +40,17 @@ Or install it yourself as:
   * [2.1 Implicit pausing and resuming](#2-1-implicit-pausing-and-resuming)
     * [2.1.1 Pre-populated input](#2-1-1-pre-populated-input)
   * [2.2 Explicit pausing and resuming](#2-2-explicit-pausing-and-resuming)
-* [3. Output inspection]
-  * [3.1 ]
+* [3. Output inspection](#3-output-inspection)
+  * [3.1 #output](#3-1-output)
+  * [3.2 #entire_output](#3-2-entire_output)
+  * [3.3 #output_stream](#3-3-output_stream)
+  * [3.4 Separation of stdout and stderr](#3-4-separation-of-stdout-and-stderr)
 * [4. Misc and aux]
-  * [4.1 run!]
-  * [4.2 exited?]
-* [5. Examples](#5-examples)
+  * [4.1 #run!]
+  * [4.2 #exited?]
+* [5. Examples]
   * [5.1 Using with the rest of TTY Toolkit family]
-* [6. How it works]
+* [6. How it works](#6-how-it-works)
 
 ## 1. Basic usage
 
@@ -114,7 +119,7 @@ See [examples](#5-examples) for more colourful usage samples.
 Pausing execution of the app block is a crucial part of this gem and
 is what makes it different from other CLI testing tools.
 
-### 2.1. Implicit pausing and resuming
+### 2.1 Implicit pausing and resuming
 
 Whenever provided testable input stream receives `#gets`, `#readline`
 or similar method calls it stops execution of the app and returns
@@ -139,7 +144,7 @@ app.input.puts "hi there"
 puts counter # => 101
 ```
 
-#### 2.1.1. Pre-populated input
+#### 2.1.1 Pre-populated input
 
 This is rarely useful but still possible:
 
@@ -157,7 +162,7 @@ app.run!                  # Execution will not get paused on `input.gets`
 puts counter # => 101
 ```
 
-### 2.2. Explicit pausing and resuming
+### 2.2 Explicit pausing and resuming
 
 Sometimes it is useful be in full control over pausing and resuming of
 the app block execution.
@@ -180,3 +185,94 @@ puts counter # => 1
 app.resume!
 puts counter # => 101
 ```
+
+## 3. Output inspection
+
+### 3.1 #output
+
+`app.output` returns standard output written by the app _since the last
+call of the same method_.
+
+```ruby
+app = TTY::Testing.app_wrapper do |input, output|
+  output.puts "What is your name?"
+  name = input.gets
+  output.puts "Hello, #{name.strip}!"
+end
+
+app.run!
+puts app.output # => What is your name?
+
+app.input.puts "John"
+puts app.output # => Hello, John!
+
+# Nothing was written to the output since the last call to `app.output`
+puts app.output # =>
+```
+
+### 3.2 #entire_output
+
+`app.entire_output` returns entire output written by the app since the
+beginning of its executionN
+
+```ruby
+app = TTY::Testing.app_wrapper do |input, output|
+  output.puts "What is your name?"
+  name = input.gets
+  output.puts "Hello, #{name.strip}!"
+end
+
+app.run!
+app.output
+app.input.puts "John"
+app.output
+
+puts app.entire_output
+# =>
+# What is your name?
+# Hello, John!
+```
+
+### 3.3 #output_stream
+
+`app.output_stream` is a genuine instance of `IO` which represent app
+output.
+Warning: reading or seeking the stream will affect return values of
+`#output` and vice versa.
+
+```ruby
+app = TTY::Testing.app_wrapper do |_, output|
+  output.puts "What is your name?"
+  output.puts "Nevermind"
+end
+
+puts app.output_stream.ready?   # => false
+app.run!
+puts app.output_stream.ready?   # => true
+puts app.output_stream.readline # => What is your name?
+```
+
+### 3.4 Separation of stdout and stderr
+
+Standard output and standard error can be separated by accepting three
+arguments in the app block:
+
+```ruby
+app = TTY::Testing.app_wrapper do |input, stdout, stderr|
+  stderr.puts "[LOG] Execution started..."
+  stdout.puts "What is your name?"
+end
+
+app.run!
+puts app.stdout # => What is your name?
+puts app.stderr # => [LOG] Execution started...
+```
+
+All correspondent methods like `#entire_stdout`, `#entire_stderr` and
+`#stdout_stream`, `#stderr_stream` work as expected.
+
+
+## 6. How it works
+
+No additional processes or threads are spun, everything is done via
+regular IO pipes and [Ruby Fibers](https://ruby-doc.org/core-2.7.1/Fiber.html)
