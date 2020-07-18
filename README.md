@@ -1,4 +1,8 @@
-# TTY::Testing
+<div align="center">
+  <a href="https://piotrmurach.github.io/tty" target="_blank"><img width="130" src="https://cdn.rawgit.com/piotrmurach/tty/master/images/tty.png" alt="tty logo" /></a>
+</div>
+
+# TTY::Testing [![Gitter](https://badges.gitter.im/Join%20Chat.svg)][gitter]
 
 > A testing tool for interactive command line apps
 
@@ -30,10 +34,10 @@ Or install it yourself as:
 ## Contents
 
 * [1. Basic usage](#1-basic-usage)
-* [2. Pausing on input]
-  * [2.1 Implicit pausing and resuming]
-    * [2.1.1 Pre-populated input]
-  * [2.2 Explicit pausing and resuming]
+* [2. Pausing on input](#2-pausing-on-input)
+  * [2.1 Implicit pausing and resuming](#2-1-implicit-pausing-and-resuming)
+    * [2.1.1 Pre-populated input](#2-1-1-pre-populated-input)
+  * [2.2 Explicit pausing and resuming](#2-2-explicit-pausing-and-resuming)
 * [3. Output inspection]
   * [3.1 ]
 * [4. Misc and aux]
@@ -45,7 +49,7 @@ Or install it yourself as:
 
 ## 1. Basic usage
 
-`TTT::Testing` wraps your console application into a testable object
+`TTT::Testing.app_wrapper` wraps your console application into a testable object
 and provides testable standard IO streams.
 
 ```ruby
@@ -59,9 +63,9 @@ end
 
 app.run!
 
-app.output # What is your name?
+app.output # => What is your name?
 app.input.puts "John"
-app.output # Hello, John!
+app.output # => Hello, John!
 ```
 
 In real-world settings it would look similar to this:
@@ -103,3 +107,76 @@ end
 ```
 
 See [examples](#5-examples) for more colourful usage samples.
+
+
+## 2. Pausing on input
+
+Pausing execution of the app block is a crucial part of this gem and
+is what makes it different from other CLI testing tools.
+
+### 2.1. Implicit pausing and resuming
+
+Whenever provided testable input stream receives `#gets`, `#readline`
+or similar method calls it stops execution of the app and returns
+flow control outside the app block.
+
+Similarly, when app input stream receives data from the outside, app
+block execution gets resumed.
+
+```ruby
+counter = 0
+
+app = TTY::Testing.app_wrapper do |input, _|
+  counter += 1
+  input.gets
+  counter += 100
+end
+
+app.run! # Execution of the app block will get paused on `input.gets`
+puts counter # => 1
+
+app.input.puts "hi there"
+puts counter # => 101
+```
+
+#### 2.1.1. Pre-populated input
+
+This is rarely useful but still possible:
+
+```ruby
+counter = 0
+
+app = TTY::Testing.app_wrapper do |input, _|
+  counter += 1
+  input.gets
+  counter += 100
+end
+
+app.input.puts "hi there" # Pre-pupulating the input
+app.run!                  # Execution will not get paused on `input.gets`
+puts counter # => 101
+```
+
+### 2.2. Explicit pausing and resuming
+
+Sometimes it is useful be in full control over pausing and resuming of
+the app block execution.
+
+```ruby
+counter = 0
+
+app = TTY::Testing.app_wrapper do |input, _|
+  counter += 1
+  input.gets
+  counter += 100
+end
+
+app.run!
+
+app.pause!
+app.input.puts "hi there" # Execution will not be resumed here
+puts counter # => 1
+
+app.resume!
+puts counter # => 101
+```
